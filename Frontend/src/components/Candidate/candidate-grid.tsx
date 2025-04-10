@@ -1,7 +1,4 @@
-"use client"
-
 import type React from "react"
-
 import { useState, useRef } from "react"
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion"
 import { Code, Github, MapPin, Briefcase, Award, Star } from "lucide-react"
@@ -13,10 +10,10 @@ interface Candidate {
   location: string
   experience: string
   matchScore: number
+  status: 'shortlisted' | 'interview' | 'new' | 'pending' | 'matched' | null
   skills: Array<{ name: string; level: number }>
   github: { repos: number; stars: number; contributions: number }
   leetcode: { solved: number; contests: number; ranking: string }
-  image: string
 }
 
 const candidates: Candidate[] = [
@@ -27,6 +24,7 @@ const candidates: Candidate[] = [
     location: "San Francisco, CA",
     experience: "7 years",
     matchScore: 92,
+    status: 'shortlisted',
     skills: [
       { name: "React", level: 95 },
       { name: "TypeScript", level: 90 },
@@ -35,7 +33,6 @@ const candidates: Candidate[] = [
     ],
     github: { repos: 32, stars: 450, contributions: 1240 },
     leetcode: { solved: 320, contests: 15, ranking: "Top 5%" },
-    image: "/placeholder.svg?height=80&width=80",
   },
   {
     id: 2,
@@ -44,6 +41,7 @@ const candidates: Candidate[] = [
     location: "New York, NY",
     experience: "5 years",
     matchScore: 88,
+    status: 'interview',
     skills: [
       { name: "Node.js", level: 92 },
       { name: "React", level: 85 },
@@ -52,7 +50,6 @@ const candidates: Candidate[] = [
     ],
     github: { repos: 24, stars: 320, contributions: 980 },
     leetcode: { solved: 280, contests: 12, ranking: "Top 10%" },
-    image: "/placeholder.svg?height=80&width=80",
   },
   {
     id: 3,
@@ -61,6 +58,7 @@ const candidates: Candidate[] = [
     location: "Austin, TX",
     experience: "4 years",
     matchScore: 85,
+    status: 'new',
     skills: [
       { name: "Python", level: 90 },
       { name: "Django", level: 85 },
@@ -69,7 +67,6 @@ const candidates: Candidate[] = [
     ],
     github: { repos: 18, stars: 210, contributions: 760 },
     leetcode: { solved: 240, contests: 8, ranking: "Top 15%" },
-    image: "/placeholder.svg?height=80&width=80",
   },
   {
     id: 4,
@@ -78,6 +75,7 @@ const candidates: Candidate[] = [
     location: "Seattle, WA",
     experience: "6 years",
     matchScore: 90,
+    status: 'pending',
     skills: [
       { name: "Figma", level: 95 },
       { name: "React", level: 88 },
@@ -86,7 +84,6 @@ const candidates: Candidate[] = [
     ],
     github: { repos: 22, stars: 380, contributions: 920 },
     leetcode: { solved: 180, contests: 5, ranking: "Top 25%" },
-    image: "/placeholder.svg?height=80&width=80",
   },
   {
     id: 5,
@@ -95,6 +92,7 @@ const candidates: Candidate[] = [
     location: "Chicago, IL",
     experience: "8 years",
     matchScore: 87,
+    status: 'matched',
     skills: [
       { name: "Kubernetes", level: 92 },
       { name: "AWS", level: 90 },
@@ -103,7 +101,6 @@ const candidates: Candidate[] = [
     ],
     github: { repos: 28, stars: 290, contributions: 1050 },
     leetcode: { solved: 150, contests: 3, ranking: "Top 30%" },
-    image: "/placeholder.svg?height=80&width=80",
   },
   {
     id: 6,
@@ -112,6 +109,7 @@ const candidates: Candidate[] = [
     location: "Portland, OR",
     experience: "5 years",
     matchScore: 84,
+    status: null,
     skills: [
       { name: "React Native", level: 90 },
       { name: "Swift", level: 85 },
@@ -120,11 +118,9 @@ const candidates: Candidate[] = [
     ],
     github: { repos: 20, stars: 240, contributions: 820 },
     leetcode: { solved: 210, contests: 7, ranking: "Top 20%" },
-    image: "/placeholder.svg?height=80&width=80",
   },
 ]
 
-// Function to get color based on skill level
 const getSkillColor = (level: number) => {
   if (level >= 90) return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
   if (level >= 80) return "bg-cyan-500/20 text-cyan-300 border-cyan-500/30"
@@ -132,91 +128,87 @@ const getSkillColor = (level: number) => {
   return "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
 }
 
-// Update the component props to include sortMethod
 interface CandidateGridProps {
   sortMethod: string
   onSortChange?: (method: string) => void
 }
 
-// Update the component definition
-export default function CandidateGrid({ sortMethod = "default", ...props }: CandidateGridProps) {
+export default function CandidateGrid({ sortMethod = "default" }: CandidateGridProps) {
   const [selectedCandidate, setSelectedCandidate] = useState<number | null>(null)
   const constraintsRef = useRef(null)
-  const [sortMethodState, setSortMethodState] = useState(sortMethod)
 
-  // Add a function to sort candidates based on the sort method
-  const getSortedCandidates = () => {
-    switch (sortMethodState) {
-      case "matchScore":
-        return [...candidates].sort((a, b) => b.matchScore - a.matchScore)
-      case "activity":
-        // For this example, we'll use github contributions as a proxy for activity
-        return [...candidates].sort((a, b) => b.github.contributions - a.github.contributions)
-      case "skills":
-        // Sort by the highest skill level
-        return [...candidates].sort((a, b) => {
-          const aMaxSkill = Math.max(...a.skills.map((s) => s.level))
-          const bMaxSkill = Math.max(...b.skills.map((s) => s.level))
-          return bMaxSkill - aMaxSkill
-        })
+  const getFilteredCandidates = () => {
+    let filtered = [...candidates]
+
+    // First apply status filters
+    switch (sortMethod) {
+      case "shortlisted":
+        filtered = filtered.filter(c => c.status === 'shortlisted')
+        break
+      case "interview":
+        filtered = filtered.filter(c => c.status === 'interview')
+        break
+      case "new":
+        filtered = filtered.filter(c => c.status === 'new')
+        break
+      case "pending":
+        filtered = filtered.filter(c => c.status === 'pending')
+        break
+      case "matches":
+        filtered = filtered.filter(c => c.status === 'matched')
+        break
+    }
+
+    // Then apply sorting
+    switch (sortMethod) {
+      case "default":
+        return filtered.sort((a, b) => b.matchScore - a.matchScore)
+      case "shortlisted":
+      case "interview":
+      case "new":
+      case "pending":
+      case "matches":
+        return filtered.sort((a, b) => b.matchScore - a.matchScore)
       default:
-        return candidates
+        return filtered
     }
   }
 
-  const sortedCandidates = getSortedCandidates()
+  const filteredCandidates = getFilteredCandidates()
 
-  // Update the title to show the current sort method
-  const getSortTitle = () => {
-    switch (sortMethodState) {
-      case "matchScore":
-        return "Highest Match Candidates"
-      case "activity":
-        return "Most Active Candidates"
-      case "skills":
-        return "Top Skilled Candidates"
+  const getStatusColor = (status: string | null) => {
+    switch (status) {
+      case 'shortlisted':
+        return 'bg-emerald-500/20 text-emerald-300'
+      case 'interview':
+        return 'bg-amber-500/20 text-amber-300'
+      case 'new':
+        return 'bg-blue-500/20 text-blue-300'
+      case 'pending':
+        return 'bg-purple-500/20 text-purple-300'
+      case 'matched':
+        return 'bg-cyan-500/20 text-cyan-300'
       default:
-        return "All Candidates"
+        return 'bg-zinc-500/20 text-zinc-300'
     }
-  }
-
-  // Add a function to set the sort method
-  const setSortMethod = (method: string) => {
-    if (props && props.onSortChange) {
-      props.onSortChange(method)
-    }
-    setSortMethodState(method)
   }
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-white">{getSortTitle()}</h2>
-        <div className="flex gap-2">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-3 py-1.5 text-sm bg-zinc-900/80 hover:bg-zinc-800 rounded-md transition-colors"
-          >
-            Filter
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-              sortMethodState === "matchScore"
-                ? "bg-cyan-500/30 text-cyan-200"
-                : "bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300"
-            }`}
-            onClick={() => sortMethodState !== "matchScore" && setSortMethod("matchScore")}
-          >
-            Sort by Match
-          </motion.button>
-        </div>
+        <h2 className="text-xl font-semibold text-white">
+          {sortMethod === "default" ? "All Candidates" : 
+           sortMethod === "shortlisted" ? "Shortlisted Candidates" :
+           sortMethod === "interview" ? "Interview Stage" :
+           sortMethod === "new" ? "New Applications" :
+           sortMethod === "pending" ? "Pending Review" :
+           sortMethod === "matches" ? "Top Matches" : "Candidates"}
+           {filteredCandidates.length > 0 && ` (${filteredCandidates.length})`}
+        </h2>
       </div>
 
       <motion.div ref={constraintsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" layout>
-        {sortedCandidates.map((candidate) => (
+        {filteredCandidates.map((candidate) => (
           <CandidateCard
             key={candidate.id}
             candidate={candidate}
@@ -224,6 +216,7 @@ export default function CandidateGrid({ sortMethod = "default", ...props }: Cand
             onSelect={() => setSelectedCandidate(candidate.id === selectedCandidate ? null : candidate.id)}
             //@ts-ignore
             constraintsRef={constraintsRef}
+            statusColor={getStatusColor(candidate.status)}
           />
         ))}
       </motion.div>
@@ -236,16 +229,15 @@ interface CandidateCardProps {
   isSelected: boolean
   onSelect: () => void
   constraintsRef: React.RefObject<HTMLDivElement>
+  statusColor: string
 }
 
-function CandidateCard({ candidate, isSelected, onSelect, constraintsRef }: CandidateCardProps) {
-  // Motion values for drag
+function CandidateCard({ candidate, isSelected, onSelect, constraintsRef, statusColor }: CandidateCardProps) {
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const rotateX = useTransform(y, [-100, 100], [10, -10])
   const rotateY = useTransform(x, [-100, 100], [-10, 10])
 
-  // Spring physics for smoother movement
   const springX = useSpring(x, { stiffness: 400, damping: 25 })
   const springY = useSpring(y, { stiffness: 400, damping: 25 })
   const springRotateX = useSpring(rotateX, { stiffness: 400, damping: 25 })
@@ -272,7 +264,6 @@ function CandidateCard({ candidate, isSelected, onSelect, constraintsRef }: Cand
         ${isSelected ? "ring-2 ring-cyan-500 shadow-lg shadow-cyan-500/20" : ""}
       `}
     >
-      {/* Match score indicator */}
       <div className="absolute top-4 right-4 flex items-center justify-center">
         <div className="relative w-12 h-12">
           <svg className="w-12 h-12 transform -rotate-90">
@@ -296,12 +287,8 @@ function CandidateCard({ candidate, isSelected, onSelect, constraintsRef }: Cand
 
       <div className="p-6">
         <div className="flex items-start gap-4 mb-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center overflow-hidden">
-            <img
-              src={candidate.image || "/placeholder.svg"}
-              alt={candidate.name}
-              className="w-full h-full object-cover"
-            />
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center text-2xl font-semibold">
+            {candidate.name.split(' ').map(n => n[0]).join('')}
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white">{candidate.name}</h3>
@@ -317,7 +304,6 @@ function CandidateCard({ candidate, isSelected, onSelect, constraintsRef }: Cand
           </div>
         </div>
 
-        {/* Skills */}
         <div className="mb-4">
           <h4 className="text-xs uppercase tracking-wider text-zinc-500 mb-2">Skills</h4>
           <div className="flex flex-wrap gap-2">
@@ -329,27 +315,17 @@ function CandidateCard({ candidate, isSelected, onSelect, constraintsRef }: Cand
           </div>
         </div>
 
-        {/* Tags */}
-        {candidate.matchScore > 90 && (
+        {candidate.status && (
           <div className="mt-2">
-            <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mr-2">
-              <Award size={10} className="mr-1" /> Top Match
-            </span>
-            <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-              <Star size={10} className="mr-1" /> Recommended
-            </span>
-          </div>
-        )}
-        {candidate.matchScore > 85 && candidate.matchScore <= 90 && (
-          <div className="mt-2">
-            <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-              <Star size={10} className="mr-1" /> Recommended
+            <span className={`inline-flex items-center px-2 py-1 text-xs rounded-md ${statusColor}`}>
+              {candidate.status === 'shortlisted' && <Star size={10} className="mr-1" />}
+              {candidate.status === 'matched' && <Award size={10} className="mr-1" />}
+              {candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1)}
             </span>
           </div>
         )}
 
-        {/* Platform insights */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="bg-zinc-800/50 rounded-lg p-3">
             <div className="flex items-center gap-2 mb-2">
               <Github size={14} className="text-zinc-400" />
@@ -392,7 +368,6 @@ function CandidateCard({ candidate, isSelected, onSelect, constraintsRef }: Cand
           </div>
         </div>
 
-        {/* Action buttons */}
         <div className="mt-4 flex gap-2">
           <motion.button
             whileHover={{ scale: 1.03 }}

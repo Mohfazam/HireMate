@@ -1,14 +1,9 @@
-"use client"
-
 import type React from "react"
-
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Users,
   BarChart3,
-  MessageSquare,
-  Calendar,
   Settings,
   Search,
   ChevronDown,
@@ -16,84 +11,126 @@ import {
   Zap,
   Menu,
   X,
+  UserCheck,
+  CalendarCheck,
+  UserPlus,
+  Star,
+  Clock,
+  Award
 } from "lucide-react"
 
-// Update the GlassSidebarProps interface to include the onSortChange prop
 interface GlassSidebarProps {
   isMobile: boolean
   onSortChange?: (sortMethod: string) => void
 }
 
-// Update the NavSection interface to include a sortBy property
 interface NavSection {
   title: string
   icon: React.ElementType
-  items: { name: string; count?: number; empty?: boolean; sortBy?: string }[]
+  items: { 
+    name: string
+    count?: number
+    icon?: React.ElementType
+    sortBy?: string 
+    status?: 'active' | 'new' | 'urgent'
+  }[]
 }
 
 export default function GlassSidebar({ isMobile, onSortChange }: GlassSidebarProps) {
   const [isOpen, setIsOpen] = useState(!isMobile)
   const [expandedSections, setExpandedSections] = useState<string[]>(["Candidates"])
-
-  // Add a new state for the active sort method and pass it to the parent component
   const [activeSort, setActiveSort] = useState<string>("default")
 
-  // Update the navSections array to have more meaningful candidate sorting options
-  // and simplify the empty feature indicators
   const navSections: NavSection[] = [
     {
       title: "Candidates",
       icon: Users,
       items: [
-        { name: "All Candidates", count: 124, sortBy: "default" },
-        { name: "Highest Match", count: 18, sortBy: "matchScore" },
-        { name: "Recent Activity", count: 42, sortBy: "activity" },
-        { name: "Technical Skills", count: 76, sortBy: "skills" },
+        { 
+          name: "All Candidates", 
+          count: 124, 
+          icon: Users,
+          sortBy: "default" 
+        },
+        { 
+          name: "Shortlisted", 
+          count: 18, 
+          icon: Star,
+          sortBy: "shortlisted",
+          status: 'active'
+        },
+        { 
+          name: "Interview Stage", 
+          count: 12, 
+          icon: CalendarCheck,
+          sortBy: "interview",
+          status: 'urgent'
+        },
+        { 
+          name: "New Applications", 
+          count: 45, 
+          icon: UserPlus,
+          sortBy: "new",
+          status: 'new'
+        },
+        { 
+          name: "Pending Review", 
+          count: 28, 
+          icon: Clock,
+          sortBy: "pending" 
+        },
+        { 
+          name: "Top Matches", 
+          count: 15, 
+          icon: Award,
+          sortBy: "matches" 
+        }
       ],
     },
     {
       title: "Analytics",
       icon: BarChart3,
-      items: [{ name: "Overview" }, { name: "Reports", empty: true }, { name: "Insights", empty: true }],
-    },
-    {
-      title: "Communication",
-      icon: MessageSquare,
       items: [
-        { name: "Messages", count: 3, empty: true },
-        { name: "Templates", empty: true },
-      ],
-    },
-    {
-      title: "Schedule",
-      icon: Calendar,
-      items: [
-        { name: "Calendar", empty: true },
-        { name: "Availability", empty: true },
+        { name: "Overview", icon: BarChart3 },
+        { name: "Hiring Pipeline", icon: Users },
+        { name: "Performance", icon: Award }
       ],
     },
     {
       title: "Settings",
       icon: Settings,
       items: [
-        { name: "Account", empty: true },
-        { name: "Team", empty: true },
-        { name: "Integrations", empty: true },
+        { name: "Preferences", icon: Settings },
+        { name: "Team Access", icon: Users },
       ],
     },
   ]
 
   const toggleSection = (title: string) => {
-    setExpandedSections((prev) => (prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]))
+    setExpandedSections((prev) => 
+      prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]
+    )
   }
 
   const toggleSidebar = () => {
     setIsOpen((prev) => !prev)
   }
 
+  const getStatusColor = (status?: 'active' | 'new' | 'urgent') => {
+    switch (status) {
+      case 'active':
+        return 'bg-emerald-500/20 text-emerald-300'
+      case 'new':
+        return 'bg-blue-500/20 text-blue-300'
+      case 'urgent':
+        return 'bg-amber-500/20 text-amber-300'
+      default:
+        return 'bg-zinc-800 text-zinc-300'
+    }
+  }
+
   return (
     <>
-      {/* Mobile toggle button */}
       {isMobile && (
         <button
           onClick={toggleSidebar}
@@ -111,27 +148,23 @@ export default function GlassSidebar({ isMobile, onSortChange }: GlassSidebarPro
             exit={{ x: -280 }}
             transition={{ type: "spring", stiffness: 120, damping: 20 }}
             className={`
-              relative z-30 w-64 shrink-0 overflow-y-auto
+              relative z-30 w-72 shrink-0 overflow-y-auto
               bg-black/40 backdrop-blur-2xl
               ${isMobile ? "fixed h-full" : ""}
             `}
           >
-            {/* Animated border */}
             <div className="absolute inset-y-0 right-0 w-[1px] bg-gradient-to-b from-transparent via-cyan-500/30 to-transparent">
               <div className="absolute inset-0 animate-pulse" />
             </div>
 
-            {/* Sidebar content */}
             <div className="p-6 space-y-8">
-              {/* Logo */}
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-md bg-gradient-to-br from-cyan-400 to-teal-300 flex items-center justify-center">
-                  <Zap size={18} className="text-black" />
+                <div className="w-10 h-10 rounded-md bg-gradient-to-br from-cyan-400 to-teal-300 flex items-center justify-center">
+                  <Zap size={20} className="text-black" />
                 </div>
                 <h1 className="text-xl font-semibold tracking-tight">HireMate</h1>
               </div>
 
-              {/* Search */}
               <div className="relative">
                 <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400" />
                 <input
@@ -141,7 +174,6 @@ export default function GlassSidebar({ isMobile, onSortChange }: GlassSidebarPro
                 />
               </div>
 
-              {/* Navigation */}
               <nav className="space-y-1">
                 {navSections.map((section) => (
                   <div key={section.title} className="py-1">
@@ -171,65 +203,50 @@ export default function GlassSidebar({ isMobile, onSortChange }: GlassSidebarPro
                         >
                           <div className="pl-9 pr-2 py-1 space-y-1">
                             {section.items.map((item) => (
-                              <div key={item.name}>
-                                {item.empty ? (
-                                  <div
-                                    className="w-full flex items-center justify-between p-2 rounded-md text-sm text-zinc-400/60 relative group cursor-not-allowed"
-                                    title="New Feature Coming Soon"
-                                  >
-                                    <span>{item.name}</span>
-                                    {item.count && (
-                                      <span className="bg-zinc-800/50 text-zinc-400/60 px-2 py-0.5 rounded-full text-xs">
-                                        {item.count}
-                                      </span>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <motion.button
-                                    whileHover={{ scale: 1.02, y: -2 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                                    className={`w-full flex items-center justify-between p-2 rounded-md text-sm 
-          ${
-            item.sortBy === activeSort
-              ? "bg-cyan-500/20 text-cyan-300"
-              : "text-zinc-400 hover:text-white hover:bg-cyan-500/10"
-          } 
-          relative group`}
-                                    onClick={() => {
-                                      if (item.sortBy) {
-                                        setActiveSort(item.sortBy)
-                                        // Pass the sort method to the parent component
-                                        if (onSortChange) {
-                                          onSortChange(item.sortBy)
-                                        }
-                                      }
-                                    }}
-                                  >
-                                    <span>{item.name}</span>
-                                    {item.count && (
-                                      <span
-                                        className={`px-2 py-0.5 rounded-full text-xs transition-colors
-            ${
-              item.sortBy === activeSort
-                ? "bg-cyan-500/30 text-cyan-200"
-                : "bg-zinc-800 text-zinc-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-300"
-            }`}
-                                      >
-                                        {item.count}
-                                      </span>
-                                    )}
-
-                                    {/* Glow effect on hover */}
-                                    <motion.div
-                                      className={`absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 -z-10
-            ${item.sortBy === activeSort ? "bg-cyan-500/10" : "bg-cyan-500/5"}`}
-                                      layoutId={`glow-${item.name}`}
-                                      transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                              <motion.button
+                                key={item.name}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className={`
+                                  w-full flex items-center justify-between p-2 rounded-md text-sm
+                                  ${item.sortBy === activeSort 
+                                    ? "bg-cyan-500/20 text-cyan-300" 
+                                    : "text-zinc-400 hover:text-white hover:bg-cyan-500/10"
+                                  }
+                                  relative group
+                                `}
+                                onClick={() => {
+                                  if (item.sortBy) {
+                                    setActiveSort(item.sortBy)
+                                    if (onSortChange) {
+                                      onSortChange(item.sortBy)
+                                    }
+                                  }
+                                }}
+                              >
+                                <div className="flex items-center gap-2">
+                                  {item.icon && (
+                                    <item.icon 
+                                      size={16} 
+                                      className={item.sortBy === activeSort ? "text-cyan-300" : "text-zinc-400"}
                                     />
-                                  </motion.button>
+                                  )}
+                                  <span>{item.name}</span>
+                                </div>
+                                {item.count && (
+                                  <span className={`
+                                    px-2 py-0.5 rounded-full text-xs transition-colors
+                                    ${item.status 
+                                      ? getStatusColor(item.status)
+                                      : item.sortBy === activeSort
+                                        ? "bg-cyan-500/30 text-cyan-200"
+                                        : "bg-zinc-800 text-zinc-300"
+                                    }
+                                  `}>
+                                    {item.count}
+                                  </span>
                                 )}
-                              </div>
+                              </motion.button>
                             ))}
                           </div>
                         </motion.div>
@@ -239,15 +256,14 @@ export default function GlassSidebar({ isMobile, onSortChange }: GlassSidebarPro
                 ))}
               </nav>
 
-              {/* User profile */}
               <div className="pt-4 mt-auto border-t border-zinc-800/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-teal-300 flex items-center justify-center">
-                    <span className="text-xs font-medium text-black">JD</span>
+                <div className="flex items-center gap-3 p-2 rounded-md bg-zinc-900/50">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-teal-300 flex items-center justify-center">
+                    <UserCheck size={20} className="text-black" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Jane Doe</p>
-                    <p className="text-xs text-zinc-400">Talent Acquisition</p>
+                    <p className="text-sm font-medium">Jane Cooper</p>
+                    <p className="text-xs text-zinc-400">HR Manager</p>
                   </div>
                 </div>
               </div>
