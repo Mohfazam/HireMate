@@ -67,7 +67,7 @@ export default function JobSubmissionForm() {
     setIsSubmitting(true)
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsSubmitting(false)
+    setIsSubmitting(false) 
     alert("Job submitted successfully!")
     navigate("/dashboard")
     // Reset form or redirect
