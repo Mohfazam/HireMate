@@ -29,7 +29,6 @@ interface NavSection {
   icon: React.ElementType
   items: { 
     name: string
-    count?: number
     icon?: React.ElementType
     sortBy?: string 
     status?: 'active' | 'new' | 'urgent'
@@ -48,40 +47,34 @@ export default function GlassSidebar({ isMobile, onSortChange }: GlassSidebarPro
       items: [
         { 
           name: "All Candidates", 
-          count: 124, 
           icon: Users,
           sortBy: "default" 
         },
         { 
           name: "Shortlisted", 
-          count: 18, 
           icon: Star,
           sortBy: "shortlisted",
           status: 'active'
         },
         { 
           name: "Interview Stage", 
-          count: 12, 
           icon: CalendarCheck,
           sortBy: "interview",
           status: 'urgent'
         },
         { 
           name: "New Applications", 
-          count: 45, 
           icon: UserPlus,
           sortBy: "new",
           status: 'new'
         },
         { 
           name: "Pending Review", 
-          count: 28, 
           icon: Clock,
           sortBy: "pending" 
         },
         { 
           name: "Top Matches", 
-          count: 15, 
           icon: Award,
           sortBy: "matches" 
         }
@@ -233,17 +226,12 @@ export default function GlassSidebar({ isMobile, onSortChange }: GlassSidebarPro
                                   )}
                                   <span>{item.name}</span>
                                 </div>
-                                {item.count && (
+                                {item.status && (
                                   <span className={`
-                                    px-2 py-0.5 rounded-full text-xs transition-colors
-                                    ${item.status 
-                                      ? getStatusColor(item.status)
-                                      : item.sortBy === activeSort
-                                        ? "bg-cyan-500/30 text-cyan-200"
-                                        : "bg-zinc-800 text-zinc-300"
-                                    }
+                                    px-2 py-0.5 rounded-full text-xs
+                                    ${getStatusColor(item.status)}
                                   `}>
-                                    {item.count}
+                                    {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                                   </span>
                                 )}
                               </motion.button>

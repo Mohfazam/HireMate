@@ -4,11 +4,30 @@ import GlassSidebar from "../General/glass-sidebar"
 import CandidateGrid from "./candidate-grid"
 import AnalyticsPanel from "./analytics-panel"
 import { Award, Briefcase, TrendingUp, Users } from "lucide-react"
+import { candidates } from "./Candidate-data"
 
 export default function DashboardLayout() {
   const [isMobile, setIsMobile] = useState(false)
   const [sortMethod, setSortMethod] = useState("default")
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 })
+
+  const candidateCounts = {
+    total: candidates.length,
+    //@ts-ignore
+    shortlisted: candidates.filter(c => c.status === 'shortlisted').length,
+    //@ts-ignore
+
+    interview: candidates.filter(c => c.status === 'interview').length,
+    //@ts-ignore
+
+    new: candidates.filter(c => c.status === 'new').length,
+    //@ts-ignore
+
+    pending: candidates.filter(c => c.status === 'pending').length,
+    //@ts-ignore
+
+    matched: candidates.filter(c => c.status === 'matched').length
+  }
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -103,7 +122,12 @@ export default function DashboardLayout() {
       </div>
 
       <div className="relative z-20 flex h-screen">
-        <GlassSidebar isMobile={isMobile} onSortChange={handleSortChange} />
+        <GlassSidebar 
+          isMobile={isMobile} 
+          onSortChange={handleSortChange}
+          //@ts-ignore
+          candidateCounts={candidateCounts}
+        />
 
         <main className="flex-1 overflow-auto p-6">
           <div className="mb-6 p-4 bg-gradient-to-r from-cyan-950/30 to-zinc-900/70 rounded-xl border border-zinc-800/50">
@@ -144,7 +168,7 @@ export default function DashboardLayout() {
                 </div>
                 <div>
                   <p className="text-xs text-zinc-400">Talent Pool</p>
-                  <p className="text-sm font-medium">1,248 candidates</p>
+                  <p className="text-sm font-medium">{candidateCounts.total} candidates</p>
                 </div>
               </div>
             </div>
