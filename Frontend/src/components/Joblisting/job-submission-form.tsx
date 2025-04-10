@@ -8,8 +8,10 @@ import { CheckCircle, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react
 import { JobDetailsStep } from "./job-details-step"
 import { RequirementsStep } from "./requirements-step"
 import { PreviewStep } from "./preview-step"
+import { useNavigate } from "react-router-dom"
 
 export default function JobSubmissionForm() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [direction, setDirection] = useState(0)
@@ -67,6 +69,7 @@ export default function JobSubmissionForm() {
     await new Promise((resolve) => setTimeout(resolve, 2000))
     setIsSubmitting(false)
     alert("Job submitted successfully!")
+    navigate("/dashboard")
     // Reset form or redirect
   }
 
