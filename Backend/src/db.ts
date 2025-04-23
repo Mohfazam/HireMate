@@ -43,5 +43,44 @@ const RecruiterSchema = new mongoose.Schema({
   }
 });
 
+// Job Listing Schema
+const JobSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: [true, 'Job title is required']
+  },
+  description: {
+    type: String,
+    required: [true, 'Job description is required']
+  },
+  requirements: {
+    type: [String],
+    required: [true, 'At least one requirement is needed']
+  },
+  location: {
+    type: String,
+    required: [true, 'Job location is required']
+  },
+  salaryRange: {
+    type: String,
+    required: [true, 'Salary range is required']
+  },
+  recruiter: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Recruiter',
+    required: true
+  },
+  applicants: {
+    type: Number,
+    default: 0
+  },
+  status: {
+    type: String,
+    enum: ['open', 'closed'],
+    default: 'open'
+  }
+}, { timestamps: true });
+
 export const JobSeeker = mongoose.model('JobSeeker', JobSeekerSchema);
 export const Recruiter = mongoose.model('Recruiter', RecruiterSchema);
+export const Job = mongoose.model('Job', JobSchema);
