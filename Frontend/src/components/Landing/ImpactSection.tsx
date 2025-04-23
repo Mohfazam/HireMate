@@ -12,7 +12,7 @@ import {
   LineChart,
   Smile
 } from 'lucide-react';
-import { ImpactStatProps } from '../types';
+import { ImpactStatProps } from '../../types/index';
 
 const ImpactStat: React.FC<ImpactStatProps> = ({ icon, value, label, description, trend }) => (
   <motion.div
@@ -125,7 +125,9 @@ const ImpactSection: React.FC = () => {
       </motion.div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
+      
         {stats.map((stat, index) => (
+            
           <ImpactStat key={index} {...stat} />
         ))}
       </div>

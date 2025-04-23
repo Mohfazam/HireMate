@@ -1,5 +1,5 @@
-// models/users.js
-const mongoose = require('mongoose');
+// src/db.ts
+import mongoose from 'mongoose';
 
 // Job Seeker Schema
 const JobSeekerSchema = new mongoose.Schema({
@@ -20,7 +20,7 @@ const JobSeekerSchema = new mongoose.Schema({
   }
 });
 
-// Recruiter Schema (with company field)
+// Recruiter Schema
 const RecruiterSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -43,8 +43,5 @@ const RecruiterSchema = new mongoose.Schema({
   }
 });
 
-// Create and export models
-module.exports = {
-  JobSeeker: mongoose.model('JobSeeker', JobSeekerSchema),
-  Recruiter: mongoose.model('Recruiter', RecruiterSchema)
-};
+export const JobSeeker = mongoose.model('JobSeeker', JobSeekerSchema);
+export const Recruiter = mongoose.model('Recruiter', RecruiterSchema);

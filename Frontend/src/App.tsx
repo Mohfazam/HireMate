@@ -4,18 +4,21 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
-import JobSubmissionForm from './components/Joblisting/job-submission-form'
-import DashboardLayout from './components/Candidate/dashboard-layout';
+import LandingPage from './components/Landing/LandingPage';
 
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <JobSubmissionForm />
+      element: <LandingPage />
     },
-    {
-      path: "/dashboard",
-      element: <DashboardLayout />
-    }
+    // {
+    //   path: "/sub",
+    //   element: <JobSubmissionForm />
+    // },
+    // {
+    //   path: "/dashboard",
+    //   element: <DashboardLayout />
+    // }
   ])
 
 function App() {

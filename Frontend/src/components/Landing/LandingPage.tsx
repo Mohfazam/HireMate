@@ -2,8 +2,8 @@ import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import HeroSection from './Hero-Section';
 import FeaturesSection from './Feature-Section';
-import ImpactSection from '../components/impact-section';
-import VisualFX from '../components/visual-fx';
+import ImpactSection from './ImpactSection';
+import VisualFX from './VisualFx';
 
 const LandingPage: React.FC = () => {
   const { scrollYProgress } = useScroll();
@@ -34,6 +34,7 @@ const LandingPage: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
+            {/* @ts-ignore */}
           <FeaturesSection className="min-h-screen py-20" />
         </motion.div>
 
@@ -43,6 +44,7 @@ const LandingPage: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
+            {/* @ts-ignore */}
           <ImpactSection className="min-h-screen py-20" />
         </motion.div>
       </div>
