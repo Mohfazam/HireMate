@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import LandingPage from './components/Landing/LandingPage';
 import AuthLayout from './components/Auth/AuthLayout';
+import RecruiterDashboard from './components/RecruiterDashboard/RecruiterDashboard';
 
   const router = createBrowserRouter([
     {
@@ -16,10 +17,10 @@ import AuthLayout from './components/Auth/AuthLayout';
       path: "/auth",
       element: <AuthLayout />
     },
-    // {
-    //   path: "/dashboard",
-    //   element: <DashboardLayout />
-    // }
+    {
+      path: "/Rdashboard",
+      element: <RecruiterDashboard />
+    }
   ])
 
 function App() {

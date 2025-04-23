@@ -3,12 +3,16 @@ import { Mail, Lock, LogIn } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { recruiterSignin } from '../../api/auth';
+import { useNavigate } from 'react-router-dom';
 
 interface RecruiterLoginProps {
   toggleAuthMode: () => void;
 }
 
 const RecruiterLogin: React.FC<RecruiterLoginProps> = ({ toggleAuthMode }) => {
+
+    const navigate = useNavigate();
+    
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -30,6 +34,7 @@ const RecruiterLogin: React.FC<RecruiterLoginProps> = ({ toggleAuthMode }) => {
       }
     } finally {
       setLoading(false);
+      navigate("/Rdashboard");
     }
   };
 

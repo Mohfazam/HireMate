@@ -1,7 +1,7 @@
 // src/db.ts
 import mongoose from 'mongoose';
 
-// Job Seeker Schema
+// Job Seeker
 const JobSeekerSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -20,7 +20,7 @@ const JobSeekerSchema = new mongoose.Schema({
   }
 });
 
-// Recruiter Schema
+// Recruiter
 const RecruiterSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -43,7 +43,7 @@ const RecruiterSchema = new mongoose.Schema({
   }
 });
 
-// Job Listing Schema
+// Job Listing (Simplified)
 const JobSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -64,22 +64,8 @@ const JobSchema = new mongoose.Schema({
   salaryRange: {
     type: String,
     required: [true, 'Salary range is required']
-  },
-  recruiter: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Recruiter',
-    required: true
-  },
-  applicants: {
-    type: Number,
-    default: 0
-  },
-  status: {
-    type: String,
-    enum: ['open', 'closed'],
-    default: 'open'
   }
-}, { timestamps: true });
+});
 
 export const JobSeeker = mongoose.model('JobSeeker', JobSeekerSchema);
 export const Recruiter = mongoose.model('Recruiter', RecruiterSchema);
