@@ -111,10 +111,21 @@ app.get('/api/jobs', async (req: Request, res: Response) => {
 app.post('/api/jobs/:jobId/apply', async (req: Request, res: Response) => {
   try {
     const { jobId } = req.params;
+    
+    // Add validation for jobId
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job ID" });
+    }
+
     const { name, email, resume, analysis } = req.body;
 
     const job = await Job.findById(jobId);
     if (!job) return res.status(404).json({ message: "Job not found" });
+
+    // Add validation for required fields
+    if (!name || !email || !resume || !analysis) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
 
     const newApplication = new Application({
       jobId,
@@ -132,7 +143,11 @@ app.post('/api/jobs/:jobId/apply', async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: "Application failed" });
+    console.error("Application Error:", error);
+    res.status(500).json({ 
+      message: "Application failed",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
   }
 });
 

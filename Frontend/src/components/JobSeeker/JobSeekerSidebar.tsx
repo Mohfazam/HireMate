@@ -1,6 +1,6 @@
 import React from 'react';
 import { Briefcase, FileText, User } from 'lucide-react';
-import { TabType } from '../types';
+import { TabType } from './index';
 
 interface SidebarProps {
   activeTab: TabType;

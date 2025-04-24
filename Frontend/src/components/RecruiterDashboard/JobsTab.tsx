@@ -1,21 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, MapPin, DollarSign, Check, MessageCircle, ChevronDown, ChevronUp, Briefcase, Users, Star, Award, TrendingUp, Calendar, Filter, Search, BriefcaseIcon, CheckCircle2, Target } from 'lucide-react';
-import { Job, mockJobs } from '../../assets/mockData';
+import { Search, MapPin, DollarSign, Clock, ChevronUp, ChevronDown, Award, Check, MessageCircle, Star, Briefcase, Users, Calendar, Target } from 'lucide-react';
 
 export const JobsTab: React.FC = () => {
-  const [selectedJob, setSelectedJob] = useState<Job | null>(mockJobs[0]);
-  const [expandedJob, setExpandedJob] = useState<number | null>(null);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'closed'>('all');
 
-  const toggleJobExpand = (jobId: number) => {
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/jobs');
+        if (!response.ok) {
+          throw new Error('Failed to fetch jobs');
+        }
+        const jobsData = await response.json();
+        
+        // Transform API data to match our UI requirements
+        const transformedJobs = jobsData.map((job: any) => ({
+          id: job._id,
+          title: job.title,
+          description: job.description || "No description provided",
+          location: job.location || "Remote",
+          salary: job.salaryRange || "$80K - $120K",
+          requirements: job.requirements || [],
+          status: 'active',
+          postedDate: '2d ago',
+          // Mock candidates data since it's not provided by the API
+          candidates: Array(Math.floor(Math.random() * 5) + 1).fill(null).map((_, i) => ({
+            id: i + 1,
+            name: ['Sarah Mitchell', 'John Anderson', 'Emily Brown', 'Michael Lee', 'Jessica Taylor'][i],
+            match: Math.floor(Math.random() * 15) + 85,
+            skills: job.requirements || ['JavaScript', 'React', 'Node.js'],
+            experience: `${['Senior', 'Lead', 'Full Stack'][Math.floor(Math.random() * 3)]} Developer • ${Math.floor(Math.random() * 5) + 5} yrs exp`
+          }))
+        }));
+
+        setJobs(transformedJobs);
+        if (transformedJobs.length > 0) {
+          setSelectedJob(transformedJobs[0]);
+        }
+      } catch (err) {
+        setError('Failed to load jobs');
+        console.error('Error fetching jobs:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  const toggleJobExpand = (jobId: string) => {
     setExpandedJob(expandedJob === jobId ? null : jobId);
   };
 
-  const filteredJobs = mockJobs.filter(job => 
-    job.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredJobs = jobs.filter(job => 
+    job.title.toLowerCase().includes(searchTerm.toLowerCase()) && 
+    (filterStatus === 'all' || job.status === filterStatus)
   );
+
+  const totalJobs = jobs.length;
+  const totalApplicants = jobs.reduce((sum, job) => sum + job.candidates.length, 0);
+  
+  let totalMatchRate = 0;
+  let totalCandidates = 0;
+  
+  jobs.forEach(job => {
+    job.candidates.forEach((candidate: any) => {
+      totalMatchRate += candidate.match;
+      totalCandidates++;
+    });
+  });
+  
+  const avgQuality = totalCandidates > 0 ? Math.round(totalMatchRate / totalCandidates) : 0;
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="bg-red-500/20 text-red-100 p-4 rounded-xl">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -41,7 +121,6 @@ export const JobsTab: React.FC = () => {
           </div>
         </div>
 
-        {/* Search and Filter Bar */}
         <div className="flex gap-4 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
@@ -64,73 +143,170 @@ export const JobsTab: React.FC = () => {
           </select>
         </div>
         
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
-          {[
-            { icon: Briefcase, label: "Total Jobs", value: "24", trend: "+12%" },
-            { icon: Users, label: "Total Applicants", value: "847", trend: "+28%" },
-            { icon: Star, label: "Avg. Quality", value: "86%", trend: "+5%" },
-            { icon: Calendar, label: "Time to Hire", value: "18d", trend: "-22%" }
-          ].map((stat, index) => (
-            <div key={index} className="bg-zinc-900/30 backdrop-blur-xl rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <stat.icon size={18} className="text-zinc-400" />
-                <span className="text-zinc-400 text-sm">{stat.label}</span>
-              </div>
-              <div className="flex items-end justify-between">
-                <span className="text-zinc-100 text-2xl font-semibold">{stat.value}</span>
-                <span className={`text-xs ${stat.trend.startsWith('+') ? 'text-emerald-400' : 'text-cyan-400'}`}>
-                  {stat.trend}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Pipeline Overview */}
-        <div className="bg-zinc-900/30 backdrop-blur-xl rounded-xl p-4 mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-zinc-100 font-medium">Recruitment Pipeline</h3>
-            <Target className="text-cyan-400" size={20} />
-          </div>
-          <div className="flex justify-between items-center">
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
             {[
-              { stage: "Applied", count: 847, color: "bg-cyan-400" },
-              { stage: "Screening", count: 423, color: "bg-emerald-400" },
-              { stage: "Interview", count: 164, color: "bg-amber-400" },
-              { stage: "Offer", count: 38, color: "bg-purple-400" },
-              { stage: "Hired", count: 24, color: "bg-pink-400" }
-            ].map((stage, index, array) => (
-              <React.Fragment key={index}>
-                <div className="text-center">
-                  <div className="text-zinc-100 font-medium">{stage.count}</div>
-                  <div className="text-zinc-400 text-sm">{stage.stage}</div>
+              { icon: Briefcase, label: "Total Jobs", value: totalJobs.toString(), trend: "+12%" },
+              { icon: Users, label: "Total Applicants", value: totalApplicants.toString(), trend: "+28%" },
+              { icon: Star, label: "Avg. Quality", value: `${avgQuality}%`, trend: "+5%" },
+              { icon: Calendar, label: "Time to Hire", value: "18d", trend: "-22%" }
+            ].map((stat, index) => (
+              <div key={index} className="bg-zinc-900/30 backdrop-blur-xl rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <stat.icon size={18} className="text-zinc-400" />
+                  <span className="text-zinc-400 text-sm">{stat.label}</span>
                 </div>
-                {index < array.length - 1 && (
-                  <div className="h-1 w-16 bg-zinc-800 relative">
-                    <motion.div 
-                      className={`absolute h-full ${stage.color}`}
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 1, delay: index * 0.2 }}
-                    />
-                  </div>
-                )}
-              </React.Fragment>
+                <div className="flex items-end justify-between">
+                  <span className="text-zinc-100 text-2xl font-semibold">{stat.value}</span>
+                  <span className={`text-xs ${stat.trend.startsWith('+') ? 'text-emerald-400' : 'text-cyan-400'}`}>
+                    {stat.trend}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-        
-        {filteredJobs.map(job => (
-          <JobCard 
-            key={job.id} 
-            job={job} 
-            isSelected={selectedJob?.id === job.id}
-            isExpanded={expandedJob === job.id}
-            onSelect={() => setSelectedJob(job)}
-            onToggleExpand={() => toggleJobExpand(job.id)}
-          />
-        ))}
+
+          <div className="bg-zinc-900/30 backdrop-blur-xl rounded-xl p-4 mb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-zinc-100 font-medium">Recruitment Pipeline</h3>
+              <Target className="text-cyan-400" size={20} />
+            </div>
+            <div className="flex justify-between items-center">
+              {[
+                { stage: "Applied", count: totalApplicants, color: "bg-cyan-400" },
+                { stage: "Screening", count: Math.round(totalApplicants * 0.5), color: "bg-emerald-400" },
+                { stage: "Interview", count: Math.round(totalApplicants * 0.2), color: "bg-amber-400" },
+                { stage: "Offer", count: Math.round(totalApplicants * 0.05), color: "bg-purple-400" },
+                { stage: "Hired", count: Math.round(totalApplicants * 0.03), color: "bg-pink-400" }
+              ].map((stage, index, array) => (
+                <React.Fragment key={index}>
+                  <div className="text-center">
+                    <div className="text-zinc-100 font-medium">{stage.count}</div>
+                    <div className="text-zinc-400 text-sm">{stage.stage}</div>
+                  </div>
+                  {index < array.length - 1 && (
+                    <div className="h-1 w-16 bg-zinc-800 relative">
+                      <motion.div 
+                        className={`absolute h-full ${stage.color}`}
+                        initial={{ width: "0%" }}
+                        animate={{ width: "100%" }}
+                        transition={{ duration: 1, delay: index * 0.2 }}
+                      />
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+          
+          {filteredJobs.length > 0 ? (
+            filteredJobs.map(job => (
+              <motion.div 
+                key={job.id}
+                className={`bg-zinc-900/50 backdrop-blur-xl rounded-2xl p-4 cursor-pointer overflow-hidden ${
+                  selectedJob?.id === job.id ? 'ring-1 ring-cyan-400/50' : ''
+                }`}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={() => setSelectedJob(job)}
+                layout
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-zinc-100 font-semibold text-lg">{job.title}</h3>
+                    <div className="flex flex-wrap items-center gap-4 mt-2 text-zinc-400 text-sm">
+                      <div className="flex items-center gap-1">
+                        <MapPin size={16} />
+                        <span>{job.location}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <DollarSign size={16} />
+                        <span>{job.salary}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock size={16} />
+                        <span>Full-time</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-end">
+                      <div className="text-emerald-400 text-sm font-medium">
+                        {job.status === 'active' ? 'Active' : job.status === 'pending' ? 'Pending' : 'Closed'}
+                      </div>
+                      <div className="text-zinc-500 text-xs">{job.postedDate}</div>
+                    </div>
+                    <button 
+                      className="text-zinc-400 hover:text-zinc-200 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleJobExpand(job.id);
+                      }}
+                    >
+                      {expandedJob === job.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {job.requirements.map((req: string, index: number) => (
+                    <span 
+                      key={index} 
+                      className="px-2 py-1 rounded-md bg-zinc-800 text-zinc-300 text-xs"
+                    >
+                      {req}
+                    </span>
+                  ))}
+                </div>
+                
+                <AnimatePresence>
+                  {expandedJob === job.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mt-4"
+                    >
+                      <p className="text-zinc-400 text-sm mb-4">{job.description}</p>
+                      
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="bg-zinc-800/50 rounded-xl p-3">
+                          <div className="text-zinc-400 text-xs mb-1">Applications</div>
+                          <div className="text-zinc-100 text-lg font-medium">{job.candidates.length}</div>
+                        </div>
+                        <div className="bg-zinc-800/50 rounded-xl p-3">
+                          <div className="text-zinc-400 text-xs mb-1">Interviews</div>
+                          <div className="text-zinc-100 text-lg font-medium">{Math.floor(job.candidates.length / 3)}</div>
+                        </div>
+                        <div className="bg-zinc-800/50 rounded-xl p-3">
+                          <div className="text-zinc-400 text-xs mb-1">Time Open</div>
+                          <div className="text-zinc-100 text-lg font-medium">{job.postedDate}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <Award size={16} className="text-amber-400" />
+                          <span className="text-zinc-300">Top applicants from previous roles</span>
+                        </div>
+                        <span className="text-emerald-400 flex items-center gap-1">
+                          <Check size={16} />
+                          Actively hiring
+                        </span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))
+          ) : (
+            <div className="bg-zinc-900/50 backdrop-blur-xl rounded-2xl p-8 text-center">
+              <h3 className="text-zinc-300 text-lg mb-2">No jobs found</h3>
+              <p className="text-zinc-500">Try adjusting your search or filters</p>
+            </div>
+          )}
+        </>
       </div>
       
       {/* Candidates Column */}
@@ -155,9 +331,71 @@ export const JobsTab: React.FC = () => {
               >
                 {selectedJob.candidates.length > 0 ? (
                   selectedJob.candidates
-                    .sort((a, b) => b.match - a.match)
-                    .map(candidate => (
-                      <CandidateCard key={candidate.id} candidate={candidate} />
+                    .sort((a: any, b: any) => b.match - a.match)
+                    .map((candidate: any) => (
+                      <motion.div 
+                        key={candidate.id}
+                        className="bg-zinc-800/50 backdrop-blur-xl rounded-xl p-4"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 className="text-zinc-100 font-medium">{candidate.name}</h4>
+                            <div className="text-zinc-500 text-sm">{candidate.experience}</div>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <div className="text-lg font-semibold text-emerald-400">{candidate.match}%</div>
+                            <div className="text-zinc-500 text-xs">Match Rate</div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-2 mb-3">
+                          {['Experience', 'Communication', 'Technical'].map((metric, index) => {
+                            const score = Math.floor(Math.random() * 20) + 80;
+                            const colors = ['bg-cyan-400', 'bg-emerald-400', 'bg-amber-400'];
+                            const textColors = ['text-cyan-400', 'text-emerald-400', 'text-amber-400'];
+                            
+                            return (
+                              <div key={metric} className="bg-zinc-900/50 rounded-lg p-2">
+                                <div className="text-xs text-zinc-400 mb-1">{metric}</div>
+                                <div className="flex items-center gap-1">
+                                  <div className="flex-1 h-1 bg-zinc-700 rounded-full overflow-hidden">
+                                    <motion.div 
+                                      className={`h-full ${colors[index]}`}
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${score}%` }}
+                                      transition={{ duration: 1 }}
+                                    />
+                                  </div>
+                                  <span className={`text-xs ${textColors[index]}`}>{score}%</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {candidate.skills.map((skill: string, index: number) => (
+                            <span 
+                              key={index} 
+                              className="px-2 py-0.5 rounded-md bg-zinc-700/70 text-zinc-300 text-xs"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <button className="flex-1 py-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 text-cyan-400 text-sm font-medium flex items-center justify-center gap-1 hover:from-cyan-500/30 hover:to-emerald-500/30 transition-colors">
+                            <MessageCircle size={16} />
+                            Contact
+                          </button>
+                          <button className="px-4 py-2 rounded-lg bg-zinc-700/30 text-zinc-400 text-sm font-medium hover:bg-zinc-700/50 transition-colors">
+                            <Star size={16} />
+                          </button>
+                        </div>
+                      </motion.div>
                     ))
                 ) : (
                   <div className="flex-1 flex items-center justify-center text-zinc-500">
@@ -199,7 +437,6 @@ export const JobsTab: React.FC = () => {
               </div>
             </div>
 
-            {/* Candidate Distribution */}
             <div className="mt-6 pt-6 border-t border-zinc-800">
               <h3 className="text-zinc-300 font-medium mb-4">Candidate Distribution</h3>
               <div className="space-y-4">
@@ -232,7 +469,6 @@ export const JobsTab: React.FC = () => {
               </div>
             </div>
 
-            {/* Interview Schedule */}
             <div className="mt-6 pt-6 border-t border-zinc-800">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-zinc-300 font-medium">Upcoming Interviews</h3>
@@ -259,221 +495,6 @@ export const JobsTab: React.FC = () => {
             </div>
           </>
         )}
-      </div>
-    </motion.div>
-  );
-};
-
-interface JobCardProps {
-  job: Job;
-  isSelected: boolean;
-  isExpanded: boolean;
-  onSelect: () => void;
-  onToggleExpand: () => void;
-}
-
-const JobCard: React.FC<JobCardProps> = ({ 
-  job, 
-  isSelected, 
-  isExpanded,
-  onSelect,
-  onToggleExpand
-}) => {
-  return (
-    <motion.div 
-      className={`bg-zinc-900/50 backdrop-blur-xl rounded-2xl p-4 cursor-pointer overflow-hidden ${
-        isSelected ? 'ring-1 ring-cyan-400/50' : ''
-      }`}
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
-      onClick={onSelect}
-      layout
-    >
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-zinc-100 font-semibold text-lg">{job.title}</h3>
-          <div className="flex items-center gap-4 mt-2 text-zinc-400 text-sm">
-            <div className="flex items-center gap-1">
-              <MapPin size={16} />
-              <span>{job.location}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <DollarSign size={16} />
-              <span>{job.salary}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Clock size={16} />
-              <span>Full-time</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col items-end">
-            <div className="text-emerald-400 text-sm font-medium">Active</div>
-            <div className="text-zinc-500 text-xs">2d ago</div>
-          </div>
-          <button 
-            className="text-zinc-400 hover:text-zinc-200 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleExpand();
-            }}
-          >
-            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </button>
-        </div>
-      </div>
-      
-      <div className="flex flex-wrap gap-2 mt-3">
-        {job.requirements.map((req, index) => (
-          <span 
-            key={index} 
-            className="px-2 py-1 rounded-md bg-zinc-800 text-zinc-300 text-xs"
-          >
-            {req}
-          </span>
-        ))}
-      </div>
-      
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mt-4"
-          >
-            <p className="text-zinc-400 text-sm mb-4">{job.description}</p>
-            
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="bg-zinc-800/50 rounded-xl p-3">
-                <div className="text-zinc-400 text-xs mb-1">Applications</div>
-                <div className="text-zinc-100 text-lg font-medium">{job.candidates.length}</div>
-              </div>
-              <div className="bg-zinc-800/50 rounded-xl p-3">
-                <div className="text-zinc-400 text-xs mb-1">Interviews</div>
-                <div className="text-zinc-100 text-lg font-medium">4</div>
-              </div>
-              <div className="bg-zinc-800/50 rounded-xl p-3">
-                <div className="text-zinc-400 text-xs mb-1">Time Open</div>
-                <div className="text-zinc-100 text-lg font-medium">12d</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <Award size={16} className="text-amber-400" />
-                <span className="text-zinc-300">Top applicants from previous roles</span>
-              </div>
-              <span className="text-emerald-400 flex items-center gap-1">
-                <Check size={16} />
-                Actively hiring
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-};
-
-interface CandidateCardProps {
-  candidate: {
-    id: number;
-    name: string;
-    match: number;
-    skills: string[];
-  };
-}
-
-const CandidateCard: React.FC<CandidateCardProps> = ({ candidate }) => {
-  // Calculate various metrics
-  const experienceScore = Math.floor(Math.random() * 20) + 80; // 80-100
-  const communicationScore = Math.floor(Math.random() * 20) + 80; // 80-100
-  const technicalScore = Math.floor(Math.random() * 15) + 85; // 85-100
-  
-  return (
-    <motion.div 
-      className="bg-zinc-800/50 backdrop-blur-xl rounded-xl p-4"
-      whileHover={{ scale: 1.02 }}
-      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h4 className="text-zinc-100 font-medium">{candidate.name}</h4>
-          <div className="text-zinc-500 text-sm">Senior Developer • 8 yrs exp</div>
-        </div>
-        <div className="flex flex-col items-end">
-          <div className="text-lg font-semibold text-emerald-400">{candidate.match}%</div>
-          <div className="text-zinc-500 text-xs">Match Rate</div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="bg-zinc-900/50 rounded-lg p-2">
-          <div className="text-xs text-zinc-400 mb-1">Experience</div>
-          <div className="flex items-center gap-1">
-            <div className="flex-1 h-1 bg-zinc-700 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-cyan-400"
-                initial={{ width: 0 }}
-                animate={{ width: `${experienceScore}%` }}
-                transition={{ duration: 1 }}
-              />
-            </div>
-            <span className="text-xs text-cyan-400">{experienceScore}%</span>
-          </div>
-        </div>
-        <div className="bg-zinc-900/50 rounded-lg p-2">
-          <div className="text-xs text-zinc-400 mb-1">Communication</div>
-          <div className="flex items-center gap-1">
-            <div className="flex-1 h-1 bg-zinc-700 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-emerald-400"
-                initial={{ width: 0 }}
-                animate={{ width: `${communicationScore}%` }}
-                transition={{ duration: 1 }}
-              />
-            </div>
-            <span className="text-xs text-emerald-400">{communicationScore}%</span>
-          </div>
-        </div>
-        <div className="bg-zinc-900/50 rounded-lg p-2">
-          <div className="text-xs text-zinc-400 mb-1">Technical</div>
-          <div className="flex items-center gap-1">
-            <div className="flex-1 h-1 bg-zinc-700 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-amber-400"
-                initial={{ width: 0 }}
-                animate={{ width: `${technicalScore}%` }}
-                transition={{ duration: 1 }}
-              />
-            </div>
-            <span className="text-xs text-amber-400">{technicalScore}%</span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex flex-wrap gap-2 mb-3">
-        {candidate.skills.map((skill, index) => (
-          <span 
-            key={index} 
-            className="px-2 py-0.5 rounded-md bg-zinc-700/70 text-zinc-300 text-xs"
-          >
-            {skill}
-          </span>
-        ))}
-      </div>
-      
-      <div className="flex gap-2">
-        <button className="flex-1 py-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 text-cyan-400 text-sm font-medium flex items-center justify-center gap-1 hover:from-cyan-500/30 hover:to-emerald-500/30 transition-colors">
-          <MessageCircle size={16} />
-          Contact
-        </button>
-        <button className="px-4 py-2 rounded-lg bg-zinc-700/30 text-zinc-400 text-sm font-medium hover:bg-zinc-700/50 transition-colors">
-          <Star size={16} />
-        </button>
       </div>
     </motion.div>
   );

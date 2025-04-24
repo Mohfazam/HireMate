@@ -3,12 +3,16 @@ import { Mail, Lock, LogIn } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { jobSeekerSignin } from '../../api/auth';
+import { useNavigate } from 'react-router-dom';
 
 interface JobSeekerLoginProps {
   toggleAuthMode: () => void;
 }
 
 const JobSeekerLogin: React.FC<JobSeekerLoginProps> = ({ toggleAuthMode }) => {
+
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -30,6 +34,7 @@ const JobSeekerLogin: React.FC<JobSeekerLoginProps> = ({ toggleAuthMode }) => {
       }
     } finally {
       setLoading(false);
+      navigate("/JDashboard");
     }
   };
 

@@ -118,26 +118,37 @@ app.get('/api/jobs', (req, res) => __awaiter(void 0, void 0, void 0, function* (
 app.post('/api/jobs/:jobId/apply', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { jobId } = req.params;
-        const { name, email, resume } = req.body;
-        // Validate job exists
+        // Add validation for jobId
+        if (!mongoose_1.default.Types.ObjectId.isValid(jobId)) {
+            return res.status(400).json({ message: "Invalid job ID" });
+        }
+        const { name, email, resume, analysis } = req.body;
         const job = yield db_1.Job.findById(jobId);
         if (!job)
             return res.status(404).json({ message: "Job not found" });
-        // Create application
+        // Add validation for required fields
+        if (!name || !email || !resume || !analysis) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
         const newApplication = new db_1.Application({
             jobId,
             name,
             email,
-            resume: resume || "No resume provided"
+            resume,
+            analysis
         });
         yield newApplication.save();
         res.status(201).json({
-            message: "Application submitted successfully",
-            applicationId: newApplication._id
+            message: "Application submitted",
+            application: newApplication
         });
     }
     catch (error) {
-        res.status(500).json({ message: "Application failed" });
+        console.error("Application Error:", error);
+        res.status(500).json({
+            message: "Application failed",
+            error: error instanceof Error ? error.message : "Unknown error"
+        });
     }
 }));
 app.listen(3000, () => {

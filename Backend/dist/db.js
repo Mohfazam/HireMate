@@ -70,21 +70,19 @@ const JobSchema = new mongoose_1.default.Schema({
     }
 });
 const ApplicationSchema = new mongoose_1.default.Schema({
-    jobId: {
-        type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: 'Job',
-        required: true
-    },
-    name: {
-        type: String,
-        required: true
-    },
-    email: {
-        type: String,
-        required: true
-    },
-    resume: {
-        type: String // Store URL or text
+    jobId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'Job', required: true },
+    userId: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'JobSeeker' },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    resume: { type: String, required: true },
+    analysis: {
+        score: Number,
+        skillsMatch: [{
+                skill: String,
+                relevance: Number
+            }],
+        experienceMatch: String,
+        recommendations: [String]
     }
 }, { timestamps: true });
 exports.Application = mongoose_1.default.model('Application', ApplicationSchema);

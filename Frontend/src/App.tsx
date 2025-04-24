@@ -7,6 +7,7 @@ import {
 import LandingPage from './components/Landing/LandingPage';
 import AuthLayout from './components/Auth/AuthLayout';
 import RecruiterDashboard from './components/RecruiterDashboard/RecruiterDashboard';
+import JobSeekerDashboard from './components/JobSeeker/JobSeekerDashboard';
 
   const router = createBrowserRouter([
     {
@@ -20,6 +21,10 @@ import RecruiterDashboard from './components/RecruiterDashboard/RecruiterDashboa
     {
       path: "/Rdashboard",
       element: <RecruiterDashboard />
+    },
+    {
+      path: "/Jdashboard",
+      element: <JobSeekerDashboard />
     }
   ])
 
