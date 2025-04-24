@@ -289,6 +289,7 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ job, onClose, onAnalysisComplet
     
     try {
       // Fix: Use the job's _id property instead of id
+      //@ts-ignore
       const jobId = job._id || job.id;
       
       if (!jobId) {
@@ -431,6 +432,8 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ job, onClose, onAnalysisComplet
                             style: 'currency',
                             currency: job.salary.currency,
                             maximumFractionDigits: 0
+      //@ts-ignore
+
                           }).formatRange(job.salary.min, job.salary.max)}
                         </p>
                       )}
