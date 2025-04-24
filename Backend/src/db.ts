@@ -67,6 +67,25 @@ const JobSchema = new mongoose.Schema({
   }
 });
 
+const ApplicationSchema = new mongoose.Schema({
+  jobId: { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'JobSeeker' },
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  resume: { type: String, required: true },
+  analysis: {
+    score: Number,
+    skillsMatch: [{
+      skill: String,
+      relevance: Number
+    }],
+    experienceMatch: String,
+    recommendations: [String]
+  }
+}, { timestamps: true });
+
+export const Application = mongoose.model('Application', ApplicationSchema);
+
 export const JobSeeker = mongoose.model('JobSeeker', JobSeekerSchema);
 export const Recruiter = mongoose.model('Recruiter', RecruiterSchema);
 export const Job = mongoose.model('Job', JobSchema);

@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import bodyParser from "body-parser";
 import bcrypt from "bcrypt";
-import { JobSeeker, Recruiter, Job } from "./db";
+import { JobSeeker, Recruiter, Job, Application } from "./db";
 
 const app = express();
 app.use(bodyParser.json());
@@ -105,6 +105,34 @@ app.get('/api/jobs', async (req: Request, res: Response) => {
     res.json(jobs);
   } catch (error) {
     res.status(500).json({ message: "Failed to get jobs" });
+  }
+});
+//@ts-ignore
+app.post('/api/jobs/:jobId/apply', async (req: Request, res: Response) => {
+  try {
+    const { jobId } = req.params;
+    const { name, email, resume, analysis } = req.body;
+
+    const job = await Job.findById(jobId);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    const newApplication = new Application({
+      jobId,
+      name,
+      email,
+      resume,
+      analysis
+    });
+
+    await newApplication.save();
+    
+    res.status(201).json({
+      message: "Application submitted",
+      application: newApplication
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Application failed" });
   }
 });
 
