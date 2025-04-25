@@ -488,7 +488,7 @@ export const JobsTab: React.FC = () => {
                       <div className="text-xs px-2 py-1 rounded-full bg-cyan-400/10 text-cyan-400">
                         {interview.stage}
                       </div>
-                    </div>
+                    </div> 
                   </div>
                 ))}
               </div>
